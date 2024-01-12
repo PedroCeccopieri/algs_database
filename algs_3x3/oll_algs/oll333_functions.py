@@ -24,7 +24,7 @@ def oll():
         for j in range(c):
 
             if (5 * i + j < l):
-                MenuIcon(oll_frame, f"Case {df['name'].iloc[5 * i + j]}", c333(150, 150, df["top"].iloc[5 * i + j], df["side"].iloc[5 * i + j]), i, j, command = lambda c = 5 * i + j: chooseOll(c)).show()
+                MenuIcon(oll_frame, f"Case {df['name'].iloc[5 * i + j]}", c333(150, 150, df["top"].iloc[5 * i + j], df["side"].iloc[5 * i + j], df["arrows"].iloc[5 * i + j]), i, j, command = lambda c = 5 * i + j: chooseOll(c)).show()
 
 def chooseOll(ncase):
 
@@ -32,7 +32,7 @@ def chooseOll(ncase):
         ollcase_window.title(f"OLL Case {ncase}")
         ollcase_window.geometry('600x400+200+200')
 
-        ca = c333(150, 150, df["top"].iloc[ncase], df["side"].iloc[ncase])
+        ca = c333(150, 150, df["top"].iloc[ncase], df["side"].iloc[ncase], df["arrows"].iloc[ncase])
         ca.createCanvas(ollcase_window)
         ca.draw()
         ca.getCanvas().pack()

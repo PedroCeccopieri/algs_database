@@ -2,6 +2,8 @@ import pandas as pd
 import json as js
 import os
 
+import numpy as np
+
 path = f"{os.path.dirname(os.path.dirname(__file__))}\database"
 
 def save(df, file):
@@ -16,7 +18,7 @@ def load(file):
     files = [i[0:len(i)-5] for i in os.listdir(path)]
     
     if (file in files):
-        return pd.read_json(path + f"\{file}.json").astype({'name': 'string','top': 'object', 'side': 'object', 'algs': 'object'})
+        return pd.read_json(path + f"\{file}.json").astype({'name': 'string','top': 'object', 'side': 'object', 'algs': 'object', 'arrows': 'object'})
     else:
         print("file not found")
-        return pd.DataFrame(columns = ['name','top', 'side', 'algs']).astype({'name': 'string','top': 'object', 'side': 'object', 'algs': 'object'})
+        return pd.DataFrame(columns = ['name','top', 'side', 'algs', 'arrows']).astype({'name': 'string','top': 'object', 'side': 'object', 'algs': 'object', 'arrows': 'object'})

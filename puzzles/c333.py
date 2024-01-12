@@ -3,10 +3,12 @@ import tkinter as tk
 import sys
 sys.path.append('../')
 
+from shapely.geometry import Polygon
+
 from utils.colors import colors
 
 class c333:
-    def __init__(self, width, height, face, side):
+    def __init__(self, width, height, face, side, arrows):
         self.n = 3
         self.s = 4
         self.width = width
@@ -18,6 +20,7 @@ class c333:
         self.stroke = 0.015 * self.width
         self.face = face
         self.side = side
+        self.arrows = arrows
 
     def createCanvas(self, parent):
         self.parent = parent
@@ -31,6 +34,9 @@ class c333:
 
     def setSide(self, side):
         self.side = side
+
+    def setArrows(self, arrows):
+        self.arrows = arrows
 
     def getPointsFace(self):
 
@@ -131,3 +137,14 @@ class c333:
                             outline="#000000", 
                             width = self.stroke
                             )
+            
+        for i in self.arrows:
+            f = self.getPointsFace()
+
+            if (len(i) == 1):
+                c = Polygon(f[i[0][0]][i[0][1]]).centroid
+                self.canvas.create_oval(c.x - 5, c.y - 5, c.x + 5, c.y + 5, fill = "#000000")
+            else:
+                c1 = Polygon(f[i[0][0]][i[0][1]]).centroid
+                c2 = Polygon(f[i[1][0]][i[1][1]]).centroid
+                self.canvas.create_line(c1.x, c1.y, c2.x, c2.y, arrow = tk.LAST, width = self.stroke)

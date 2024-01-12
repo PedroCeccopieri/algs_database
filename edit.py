@@ -2,19 +2,20 @@ import tkinter as tk
 import pandas as pd
 import copy as cp
 
+from shapely.geometry import Polygon
+
 from puzzles.c333 import c333
 from utils.colors import colors
 from utils.saveAndLoad import save, load
 
 def redraw():
-    print("redraw")
 
     c3.setFace(topColors)
     c3.setSide(sideColors)
+    c3.setArrows(arrowsList)
     c3.draw()
 
 def paint(event):
-    print("paint", event)
 
     for idxi, i in enumerate(face):
         for idxj, j in enumerate(i):
@@ -28,14 +29,31 @@ def paint(event):
 
     redraw()
 
+def drawArrow(event):
+    
+    for idxi, i in enumerate(face):
+        for idxj, j in enumerate(i):
+            if (j[0][0] <= event.x <= j[2][0] and j[0][1] <= event.y <= j[2][1]):
+                c = Polygon(j).centroid
+
+                if ([len(k) for k in arrowsList].count(2) == len(arrowsList)):
+                    arrowsList.append([(idxi,idxj)])
+                else:
+                    for k in arrowsList:
+                        if (len(k) == 1 and not k[0] == (idxi,idxj)):
+                            k.append((idxi,idxj))
+    redraw()
+
+def clearArrows():
+    arrowsList.clear()
+    redraw()
+
 def setColor(color):
-    print("setColor", color)
 
     global currentColor
     currentColor = color
 
 def saveCase(case):
-    print("saveCase", case)
     global df
 
     names = df["name"]
@@ -47,32 +65,27 @@ def saveCase(case):
         else:
             df.loc[df["name"] == case, "top"] = [cp.deepcopy(topColors)]
             df.loc[df["name"] == case, "side"] = [cp.deepcopy(sideColors)]
+            df.loc[df["name"] == case, "arrows"] = [cp.deepcopy(arrowsList)]
     else:
         add = True
     
-    if (case and add):
-        newRow = {"name": [case], "top": [cp.deepcopy(topColors)], "side": [cp.deepcopy(sideColors)], "algs": [[]]}
-        df = pd.concat([df,pd.DataFrame(newRow)], ignore_index = True)
+    if (case):
+        if (add):
+            newRow = {"name": [case], "top": [cp.deepcopy(topColors)], "side": [cp.deepcopy(sideColors)], "algs": [[]], 'arrows': [[]]}
+            df = pd.concat([df,pd.DataFrame(newRow)], ignore_index = True)
     else:
         print("No case name given")
 
     reloadCases()
 
 def loadCases(file):
-    print("loadCases", file)
-
     global df
 
     df = load(file)
 
-    for idx, row in df.iterrows():
-        print(type(row["top"]))
-
     reloadCases()
 
 def reloadCases():
-    print("reloadCases")
-
     global caseSelected
 
     lstbox1.delete(0,tk.END)
@@ -87,8 +100,6 @@ def reloadCases():
     caseSelected = None
 
 def deleteCase(case):
-    print("deleteCase", case)
-    
     global df
 
     if (case != None):
@@ -98,16 +109,14 @@ def deleteCase(case):
         print("No case selected")
 
 def loadCaseImage(case):
-    print("loadCaseImage", case)
-
-    global topColors, sideColors
-
+    global topColors, sideColors, arrowsList
+    
     topColors = cp.deepcopy(df.loc[df["name"] == case]["top"].iloc[0])
     sideColors = cp.deepcopy(df.loc[df["name"] == case]["side"].iloc[0])
+    arrowsList = cp.deepcopy(df.loc[df["name"] == case]["arrows"].iloc[0])
     redraw()
 
 def saveCases(file):
-    print("saveCases", file)
 
     if (file):
         save(df, file)
@@ -115,8 +124,6 @@ def saveCases(file):
         print("No file name given")
 
 def loadAlgs(case):
-    print("loadAlgs", case)
-
     global lstbox2
 
     lstbox2.delete(0,tk.END)
@@ -125,7 +132,6 @@ def loadAlgs(case):
         lstbox2.insert(tk.END, a)
 
 def addAlg(case, alg):
-    print("addAlg", case, alg)
 
     if (case != None):
         if (alg):
@@ -137,7 +143,6 @@ def addAlg(case, alg):
         print("No case selected")
 
 def deleteAlg(case, alg):
-    print("deleteAlg", case, alg)
 
     if (case != None):
         if (alg):
@@ -151,8 +156,6 @@ def deleteAlg(case, alg):
     reloadCases()
 
 def selectCase(listbox):
-    print("selectCase", listbox)
-
     global caseSelected
 
     caseSelected = getSelected(listbox)
@@ -164,7 +167,6 @@ def selectCase(listbox):
         print("No case selected")
 
 def getSelected(listbox):
-    print("getSelected", listbox)
 
     selected_indices = listbox.curselection()
     if (selected_indices):
@@ -179,17 +181,18 @@ root.bind_all("<Button-1>", lambda event: event.widget.focus())
 
 topColors = [[0,0,0],[0,0,0],[0,0,0]]
 sideColors = [[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
+arrowsList = []
 currentColor = 0
 caseSelected = None
 
-df = pd.DataFrame(columns = ['name','top', 'side', 'algs']).astype({'name': 'string','top': 'object', 'side': 'object', 'algs': 'object'})
+df = pd.DataFrame(columns = ['name','top', 'side', 'algs', 'arrows']).astype({'name': 'string','top': 'object', 'side': 'object', 'algs': 'object', 'arrows': 'object'})
 
 width = 400
 height = 300
 
 # ================================================ #
 
-frame1 = tk.LabelFrame(root, width = width, height = height, text = "Case editor")
+frame1 = tk.LabelFrame(root, width = width, height = height, text = "Case editor colors")
 frame1.grid(row = 0, column = 0, padx = 10)
 
 frame11 = tk.Frame(frame1)
@@ -201,22 +204,24 @@ lb1.grid(row = 0, column = 0, padx = 5, pady = 5)
 txtbox1 = tk.Entry(frame11, takefocus = 0)
 txtbox1.grid(row = 0, column = 1, pady = 5)
 
-c3 = c333(300,300, topColors, sideColors)
+c3 = c333(300,300, topColors, sideColors, [])
 c3.createCanvas(frame1)
 puzzle = c3.getCanvas()
 puzzle.bind('<Button-1>', paint)
+puzzle.bind('<Button-3>', drawArrow)
 puzzle.grid(row = 1, column = 0, pady = 5)
 
 c3.draw()
 face = c3.getPointsFace()
 side = c3.getPointsSide()
 
-tk.Button(frame1, text = "Save case", width = 20, font = ("Helvectia", 14), command = lambda: saveCase(txtbox1.get())).grid(row = 2, column = 0, pady = 5)
+tk.Button(frame1, text = "Clear arrows", width = 20, font = ("Helvectia", 14), command = clearArrows).grid(row = 3, column = 0, pady = 5)
+tk.Button(frame1, text = "Save case", width = 20, font = ("Helvectia", 14), command = lambda: saveCase(txtbox1.get())).grid(row = 4, column = 0, pady = 5)
 
 # ================================================ #
 
 frame2 = tk.LabelFrame(root, width = width, height = height, text = "Colors")
-frame2.grid(row = 0, column = 1, padx = 10)
+frame2.grid(row = 0, column = 2, padx = 10)
 
 for idx, (name, color) in enumerate(colors.items()):
     tk.Button(frame2, text = name, fg = "#000000", bg = color, width = 20, font = ("Helvectia", 14), command = lambda x = idx: setColor(x)).pack()
@@ -224,7 +229,7 @@ for idx, (name, color) in enumerate(colors.items()):
 # ================================================ #
 
 frame3 = tk.LabelFrame(root, width = width, height = height, text = "Cases")
-frame3.grid(row = 0, column = 2, padx = 10)
+frame3.grid(row = 0, column = 3, padx = 10)
 
 frame31 = tk.Frame(frame3)
 frame31.grid(row = 0, column = 0)
@@ -250,7 +255,7 @@ tk.Button(frame3, text = "Delete case", width = 20, font = ("Helvectia", 14), co
 # ================================================ #
 
 frame4 = tk.LabelFrame(root, width = width, height = height, text = "Algs")
-frame4.grid(row = 0, column = 3, padx = 10)
+frame4.grid(row = 0, column = 4, padx = 10)
 
 frame41 = tk.Frame(frame4)
 frame41.grid(row = 0, column = 0, pady = 5)
@@ -274,7 +279,8 @@ def updateLabel():
     lb02['text'] = str(sideColors)
     lb03['text'] = str(currentColor)
     lb04['text'] = str(caseSelected)
-    lb05['text'] = str(df)
+    lb05['text'] = str(arrowsList)
+    lb06['text'] = str(df)
     root.after(100, updateLabel)
 
 
@@ -285,13 +291,15 @@ lb01 = tk.Label(frame0, text = str(topColors))
 lb02 = tk.Label(frame0, text = str(sideColors))
 lb03 = tk.Label(frame0, text = str(currentColor))
 lb04 = tk.Label(frame0, text = str(caseSelected))
-lb05 = tk.Label(frame0, text = str(df))
+lb05 = tk.Label(frame0, text = str(arrowsList))
+lb06 = tk.Label(frame0, text = str(df))
 
 lb01.pack()
 lb02.pack()
 lb03.pack()
 lb04.pack()
 lb05.pack()
+lb06.pack()
 
 # ================================================ #
 

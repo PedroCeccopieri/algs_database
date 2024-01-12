@@ -20,6 +20,6 @@ def algs333():
     algs333_window.geometry('600x400+200+200')
     
     i = rd.randint(1, olldf.shape[0]-1)
-    MenuIcon(algs333_window, "OLL", c333(150, 150, olldf["top"].iloc[i], olldf["side"].iloc[i]), 0, 0, command = oll).show()
+    MenuIcon(algs333_window, "OLL", c333(150, 150, olldf["top"].iloc[i], olldf["side"].iloc[i], []), 0, 0, command = oll).show()
     j = rd.randint(1, plldf.shape[0]-1)
-    MenuIcon(algs333_window, "PLL", c333(150, 150, plldf["top"].iloc[j], plldf["side"].iloc[j]), 0, 1, command = pll).show()
+    MenuIcon(algs333_window, "PLL", c333(150, 150, plldf["top"].iloc[j], plldf["side"].iloc[j], []), 0, 1, command = pll).show()
